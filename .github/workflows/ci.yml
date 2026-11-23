@@ -39,3 +39,30 @@ jobs:
         with:
           name: test-results-${{ matrix.python-version }}
           path: test-results.xml
+          permissions:
+  contents: read
+
+  sast:
+    name: SAST (Bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install bandit
+      - run: bandit -r app -ll
+
+  trivy-fs:
+    name: Trivy (dependências, segredos, Dockerfile/compose)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          
